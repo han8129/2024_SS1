@@ -17,16 +17,21 @@ public class TicTacToeProblem extends AbstractProblem implements Problem{
         TicTacToeVariable variable = (TicTacToeVariable) solution.getVariable(0);
         Boolean[] board = variable.getBoard();
 
-        // Đánh giá kết quả trận đấu: thắng, hòa, thua
+        // Evaluate the result based on the current state of the board
         int result = checkGameResult(board);
 
-        // Đánh giá chiều dài trận đấu (số nước đi)
-        int moves = countMoves(board);
-
-        // Đặt các mục tiêu cho NSGA-III
-        solution.setObjective(0, result); // Mục tiêu thắng
-        solution.setObjective(1, moves);  // Độ dài trận đấu
+        // If there's a winner or a draw, set the objectives and end the game
+        if (result != -1) {
+            solution.setObjective(0, result); // Set win or draw condition
+            solution.setObjective(1, countMoves(board)); // Number of moves made
+        } else {
+            // If the game is still ongoing, don't update objectives yet (game continues)
+            // You might want to flag this as a continuation
+            solution.setObjective(0, Double.MAX_VALUE); // Game still ongoing
+            solution.setObjective(1, Double.MAX_VALUE); // Game still ongoing
+        }
     }
+
 
     @Override
     public Solution newSolution() {
@@ -47,46 +52,81 @@ public class TicTacToeProblem extends AbstractProblem implements Problem{
         // Check rows, columns, and diagonals for winning conditions
         if (checkWin(grid, true)) return 2; // Player X wins
         if (checkWin(grid, false)) return 0; // Player O wins
-        return 1; // Assume draw for simplicity
+
+        // If no win condition and the board is full, return 1 for a draw
+        if (isBoardFull(board)) return 1;
+
+        // If no winner and the board is not full, return a special value (e.g., -1) to indicate the game continues
+        return -1;
     }
 
-    private boolean checkWin(Boolean[][] grid, boolean player) {
-        // Check rows and columns
-        for (int i = 0; i < 5; i++) {
-            if ((checkRow(grid, i, player)) || (checkColumn(grid, i, player))) return true;
+    // Check if all cells on the board are filled (used to detect draw condition)
+    private boolean isBoardFull(Boolean[] board) {
+        for (Boolean cell : board) {
+            if (cell == null) {
+                return false; // There are still empty cells
+            }
         }
-        // Check diagonals
+        return true; // All cells are filled
+    }
+
+
+    private boolean checkWin(Boolean[][] grid, boolean player) {
+        // Check rows, columns, and diagonals for 3 consecutive cells
+        for (int i = 0; i < 5; i++) {
+            if (checkRow(grid, i, player) || checkColumn(grid, i, player)) {
+                return true; // A player wins if any row or column has 3 consecutive symbols
+            }
+        }
+
+        // Check diagonals for 3 consecutive cells
         return checkDiagonal(grid, player);
     }
 
     private boolean checkRow(Boolean[][] grid, int row, boolean player) {
-        for (int i = 0; i < 5; i++) {
-            if (grid[row][i] == null || grid[row][i] != player) return false;
+        // Check for 3 consecutive cells in a row
+        for (int i = 0; i <= 2; i++) {  // Stop at the third cell to avoid index out of bounds
+            if (grid[row][i] != null && grid[row][i] == player &&
+                    grid[row][i + 1] != null && grid[row][i + 1] == player &&
+                    grid[row][i + 2] != null && grid[row][i + 2] == player) {
+                return true; // 3 consecutive cells found
+            }
         }
-        return true;
+        return false;
     }
 
     private boolean checkColumn(Boolean[][] grid, int col, boolean player) {
-        for (int i = 0; i < 5; i++) {
-            if (grid[i][col] == null || grid[i][col] != player) return false;
+        // Check for 3 consecutive cells in a column
+        for (int i = 0; i <= 2; i++) {  // Stop at the third row to avoid overflow
+            if (grid[i][col] != null && grid[i][col] == player &&
+                    grid[i + 1][col] != null && grid[i + 1][col] == player &&
+                    grid[i + 2][col] != null && grid[i + 2][col] == player) {
+                return true; // 3 consecutive cells found
+            }
         }
-        return true;
+        return false;
     }
 
     private boolean checkDiagonal(Boolean[][] grid, boolean player) {
-        // Check main diagonal
-        boolean win = true;
-        for (int i = 0; i < 5; i++) {
-            if (grid[i][i] == null || grid[i][i] != player) win = false;
+        // Check for 3 consecutive cells in the main diagonal
+        for (int i = 0; i <= 2; i++) {
+            if (grid[i][i] != null && grid[i][i] == player &&
+                    grid[i + 1][i + 1] != null && grid[i + 1][i + 1] == player &&
+                    grid[i + 2][i + 2] != null && grid[i + 2][i + 2] == player) {
+                return true; // 3 consecutive cells found in main diagonal
+            }
         }
-        if (win) return true;
 
-        // Check anti-diagonal
-        win = true;
-        for (int i = 0; i < 5; i++) {
-            if (grid[i][4 - i] == null || grid[i][4 - i] != player) return false;
+        // Check for 3 consecutive cells in the anti-diagonal
+        for (int i = 0; i <= 2; i++) {
+            if (grid[i][4 - i] != null && grid[i][4 - i] == player &&
+                    grid[i + 1][3 - i] != null && grid[i + 1][3 - i] == player &&
+                    grid[i + 2][2 - i] != null && grid[i + 2][2 - i] == player) {
+                return true; // 3 consecutive cells found in anti-diagonal
+            }
         }
-        return win;
+
+        return false;
     }
 
 

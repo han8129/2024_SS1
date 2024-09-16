@@ -5,10 +5,10 @@ import java.util.Random;
 import java.util.Arrays;
 
 public class TicTacToeVariable implements Variable {
-    private Boolean[] board; // 25-element array
+    private Boolean[] board; // 25-element array representing a 5x5 board
 
     public TicTacToeVariable() {
-        // Khởi tạo một bảng rỗng với tất cả các giá trị là null
+        // Initialize an empty board with all values as null
         this.board = new Boolean[25];
     }
 
@@ -39,13 +39,18 @@ public class TicTacToeVariable implements Variable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Boolean cell : board) {
-            if (cell == null) {
+        for (int i = 0; i < board.length; i++) {
+            if (board[i] == null) {
                 sb.append("_ "); // Empty cell
-            } else if (cell) {
+            } else if (board[i]) {
                 sb.append("X "); // Player X
             } else {
                 sb.append("O "); // Player O
+            }
+
+            // Add a newline after every 5 elements to format as a 5x5 grid
+            if ((i + 1) % 5 == 0) {
+                sb.append("\n");
             }
         }
         return sb.toString().trim();
@@ -84,4 +89,3 @@ public class TicTacToeVariable implements Variable {
         return board;
     }
 }
-
