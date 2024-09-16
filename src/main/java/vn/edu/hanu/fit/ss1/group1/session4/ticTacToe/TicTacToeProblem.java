@@ -25,8 +25,6 @@ public class TicTacToeProblem extends AbstractProblem implements Problem{
             solution.setObjective(0, result); // Set win or draw condition
             solution.setObjective(1, countMoves(board)); // Number of moves made
         } else {
-            // If the game is still ongoing, don't update objectives yet (game continues)
-            // You might want to flag this as a continuation
             solution.setObjective(0, Double.MAX_VALUE); // Game still ongoing
             solution.setObjective(1, Double.MAX_VALUE); // Game still ongoing
         }
