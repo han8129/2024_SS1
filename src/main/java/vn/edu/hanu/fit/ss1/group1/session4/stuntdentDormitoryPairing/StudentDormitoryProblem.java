@@ -1,14 +1,16 @@
 package vn.edu.hanu.fit.ss1.group1.session4.stuntdentDormitoryPairing;
 
+import lombok.experimental.FieldDefaults;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 import java.util.*;
 
+@FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class StudentDormitoryProblem extends AbstractProblem {
-    private final List<Student> students;
-    private final List<Dormitory> dormitories;
-    private final Set<Pair<Student, Dormitory>> excludedPairs;
+    List<Student> students;
+    List<Dormitory> dormitories;
+    Set<Pair<Student, Dormitory>> excludedPairs;
 
     public StudentDormitoryProblem(List<Student> students, List<Dormitory> dormitories) {
         super(students.size(), 3);
@@ -38,11 +40,11 @@ public class StudentDormitoryProblem extends AbstractProblem {
 
             if (dormitory == null) studentsWithoutDormitory++;
             else {
+                if (excludedPairs.contains(new Pair<>(student, dormitory))) continue;
                 if (dormitory.getStudents().size() > dormitory.getCapacity()) studentsInOvercrowdedDormitory++;
                 if (!student.getPreferences().contains(dormitory) || !dormitory.getPreferences().contains(student)) preferenceMismatch++;
                 if (!dormitory.getStudentPreferences().contains(student.getPersonalityTrait())) preferenceMismatch++;
                 if (student.getDormPreferences().stream().noneMatch(trait -> trait.equals(dormitory.getDormTrait()))) preferenceMismatch++;
-                if (excludedPairs.contains(new Pair<>(student, dormitory))) preferenceMismatch += 10; // High penalty for excluded pairs
             }
         }
 

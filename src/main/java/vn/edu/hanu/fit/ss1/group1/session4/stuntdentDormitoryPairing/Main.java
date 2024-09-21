@@ -54,13 +54,13 @@ public class Main {
                 .attachAllMetricCollectors();
         Executor executor = new Executor()
                 .withProblem(problem)
-                .withProperty("populationSize", 10)
+                .withProperty("populationSize", 100)
                 .withInstrumenter(instrumenter)
                 .withMaxEvaluations(1000);
         Analyzer analyzer = new Analyzer()
                 .withSameProblemAs(executor)
                 .withReferenceSet(referenceSet)
-                .includeGenerationalDistance();
+                .includeAllMetrics();
         for (String algorithm : algorithms) analyzer.addAll(algorithm, executor.withAlgorithm(algorithm).runSeeds(50));
         analyzer.display();
         Observations observations = instrumenter.getObservations();
