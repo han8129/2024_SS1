@@ -29,23 +29,20 @@ public class Main {
 
     public void runOptimization() {
         StudentDormitoryProblem problem = new StudentDormitoryProblem(students, dormitories);
-        initializeExcludedPairs(problem, students, dormitories);
         NondominatedPopulation referenceSet = new NondominatedPopulation();
-        Solution solution1 = new Solution(students.size(), 3);  // 3 objectives
+        Solution solution1 = new Solution(students.size(), 1, 1);
         for (int i = 0; i < students.size(); i++)
             solution1.setVariable(i, EncodingUtils.newInt(0, dormitories.size() - 1));
-        solution1.setObjective(0, 20);
-        solution1.setObjective(1, 5);
-        solution1.setObjective(2, 2);
-        Solution solution2 = new Solution(students.size(), 3);  // 3 objectives
+        solution1.setObjective(0, 30.23);
+        solution1.setConstraint(0, 0.0);
+        Solution solution2 = new Solution(students.size(), 1, 1);
         for (int i = 0; i < students.size(); i++)
             solution2.setVariable(i, EncodingUtils.newInt(0, dormitories.size() - 1));
-        solution2.setObjective(0, 10);
-        solution2.setObjective(1, 10);
-        solution2.setObjective(2, 4);
+        solution2.setObjective(0, 10.5);
+        solution2.setConstraint(0, 2.0);
         referenceSet.add(solution1);
         referenceSet.add(solution2);
-        String[] algorithms = {"NSGAII", "GDE3", "eMOEA"};
+        String[] algorithms = {"NSGAII", "eMOEA", "SPEA2", "IBEA"};
 
         Instrumenter instrumenter = new Instrumenter()
                 .withProblem(problem)
@@ -61,7 +58,7 @@ public class Main {
                 .withSameProblemAs(executor)
                 .withReferenceSet(referenceSet)
                 .includeAllMetrics();
-        for (String algorithm : algorithms) analyzer.addAll(algorithm, executor.withAlgorithm(algorithm).runSeeds(50));
+        for (String algorithm : algorithms) analyzer.addAll(algorithm, executor.withAlgorithm(algorithm).runSeeds(100));
         analyzer.display();
         Observations observations = instrumenter.getObservations();
         observations.display();

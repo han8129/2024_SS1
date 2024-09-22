@@ -1,7 +1,5 @@
 package vn.edu.hanu.fit.ss1.group1.session4.stuntdentDormitoryPairing;
 
-import org.moeaframework.problem.misc.Lis;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -74,26 +72,6 @@ public class Utils {
         List<T> list = new ArrayList<>(Arrays.asList(array));
         Collections.shuffle(list);
         return list.subList(0, Math.min(size, list.size()));
-    }
-
-    public static void initializeExcludedPairs(StudentDormitoryProblem problem, List<Student> students, List<Dormitory> dormitories) {
-        // Example: Exclude Alice from Dormitory B and Bob from Dormitory A
-        Student alice = findStudentByName("Student 1", students);
-        Student bob = findStudentByName("Student 2",students);
-        Dormitory dormA = findDormitoryByName("Dormitory A",dormitories);
-        Dormitory dormB = findDormitoryByName("Dormitory B", dormitories);
-
-        if (alice != null && dormB != null) {
-            problem.addExcludedPair(alice, dormB);
-            System.out.println("Excluded pair added: Alice and Dormitory B");
-        }
-
-        if (bob != null && dormA != null) {
-            problem.addExcludedPair(bob, dormA);
-            System.out.println("Excluded pair added: Bob and Dormitory A");
-        }
-
-        // You can add more excluded pairs here as needed
     }
 
     private static Student findStudentByName(String name, List<Student> students) {

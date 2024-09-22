@@ -1,6 +1,8 @@
 package vn.edu.hanu.fit.ss1.group1.session4.stuntdentDormitoryPairing;
 
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.RandomUtils;
+import org.moeaframework.core.Constraint;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
@@ -10,47 +12,42 @@ import java.util.*;
 public class StudentDormitoryProblem extends AbstractProblem {
     List<Student> students;
     List<Dormitory> dormitories;
-    Set<Pair<Student, Dormitory>> excludedPairs;
+
+    double alpha1 = 1.0; // Weight for minimizing preference mismatches
+    double alpha2 = 1.0; // Weight for minimizing overcrowding
+    double alpha3 = 1.0; // Weight for minimizing unassigned students
 
     public StudentDormitoryProblem(List<Student> students, List<Dormitory> dormitories) {
-        super(students.size(), 3);
+        super(students.size(), 1, 1);
         this.students = students;
         this.dormitories = dormitories;
-        this.excludedPairs = new HashSet<>();
-    }
-
-    public void addExcludedPair(Student student, Dormitory dormitory) {
-        excludedPairs.add(new Pair<>(student, dormitory));
     }
 
     @Override
     public void evaluate(Solution solution) {
-        Map<Student, Dormitory> matching = runGaleShapley();
         int studentsWithoutDormitory = 0;
         int studentsInOvercrowdedDormitory = 0;
         int preferenceMismatch = 0;
 
-        for (Dormitory dormitory : dormitories) {
-            dormitory.getStudents().clear();
-        }
-
-        for (Map.Entry<Student, Dormitory> entry : matching.entrySet()) {
-            Student student = entry.getKey();
-            Dormitory dormitory = entry.getValue();
-
-            if (dormitory == null) studentsWithoutDormitory++;
+        for (int i = 0; i < students.size(); i++) {
+            int dormitoryIndex = EncodingUtils.getInt(solution.getVariable(i));
+            Student student = students.get(i);
+            if (dormitoryIndex == -1) studentsWithoutDormitory++;
             else {
-                if (excludedPairs.contains(new Pair<>(student, dormitory))) continue;
+                Dormitory dormitory = dormitories.get(dormitoryIndex);
+                dormitory.addStudent(student);
                 if (dormitory.getStudents().size() > dormitory.getCapacity()) studentsInOvercrowdedDormitory++;
                 if (!student.getPreferences().contains(dormitory) || !dormitory.getPreferences().contains(student)) preferenceMismatch++;
                 if (!dormitory.getStudentPreferences().contains(student.getPersonalityTrait())) preferenceMismatch++;
-                if (student.getDormPreferences().stream().noneMatch(trait -> trait.equals(dormitory.getDormTrait()))) preferenceMismatch++;
+                if (student.getDormPreferences().stream()
+                        .noneMatch(trait -> trait.equals(dormitory.getDormTrait()))) {
+                    preferenceMismatch++;
+                }
             }
+            solution.setObjective(0, alpha1 * preferenceMismatch + alpha2 * studentsInOvercrowdedDormitory + alpha3 * studentsWithoutDormitory);
+            // Constraint to prevent dormitory and student with same index from being matched
+            solution.setConstraint(0, Constraint.notEqual(i, dormitoryIndex));
         }
-
-        solution.setObjective(0, studentsWithoutDormitory);
-        solution.setObjective(1, studentsInOvercrowdedDormitory);
-        solution.setObjective(2, preferenceMismatch);
     }
 
     private Map<Student, Dormitory> runGaleShapley() {
@@ -60,7 +57,7 @@ public class StudentDormitoryProblem extends AbstractProblem {
         while (!freeStudents.isEmpty()) {
             Student student = freeStudents.poll();
             for (Dormitory dormitory : student.getPreferences()) {
-                if (dormitory.getStudents().size() < dormitory.getCapacity() && !excludedPairs.contains(new Pair<>(student, dormitory))) {
+                if (dormitory.getStudents().size() < dormitory.getCapacity()) {
                     matching.put(student, dormitory);
                     dormitory.addStudent(student);
                     break;
@@ -85,7 +82,7 @@ public class StudentDormitoryProblem extends AbstractProblem {
 
     @Override
     public Solution newSolution() {
-        Solution solution = new Solution(students.size(), 3);
+        Solution solution = new Solution(students.size(), 1, 1);
         for (int i = 0; i < students.size(); i++) {
             solution.setVariable(i, EncodingUtils.newInt(-1, dormitories.size() - 1));
         }
