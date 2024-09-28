@@ -1,0 +1,11 @@
+#+title: Session 6 Tasks
+
+- Modeling problem with custom variable, and variation, (Duy, Manh)
+  - ArmRace need custom Variation - selection algorithm/strategy
+- setup previous year code, document (may be Dat, Hoang)
+  - package the code .jar then pass it into a docker container(stage it on a
+    environment close to the server)
+  - 16gb ram, 2 core (intel xeon)
+  - document so that the whole team can use
+  
+[[https://github.com/han8129/2024_SS1/blob/master/src/main/java/vn/edu/hanu/fit/ss1/group1/session4/ticTacToe/GameVariation.java][Custom Variation]]
