@@ -1,34 +1,3 @@
-#+title: Session 4 Preparation
+#+title: 2024 SS1 Monday Group 1
 
-* TODO Task
-DEADLINE: <2024-09-14 Sat 21:00>
-Both types of problem must be modelize using the MOEA framework
-** TODO 2 Game Theory problems
-Should be easy enough to finish within 2 days
-*** tic tac toe
-- solution :: array of sequential snap shot of grid states (25 element array of
-  either "true" or "false") , the length of the game end when the board is
-  completely filled or either player won (have 3 continuous cell)
-- pre-execution hyper-parameter :: which player can go first
-- evaluation :: preferences order
-  1. our player win or win with least moves(snapshot of grid
-     states)
-  2. draw :: the grid is filled completely
-  3. lose
-*** arm race
-2 or more countries, each country can
-- strategies
-  - every period country have 10% increase of money
-  - do nothing
-  - buy weapons
-  - attack :: which need previously purchased weapons
-    - if both attack we consider the war is resolved
-    - if 1 attack and the other does not we consider the attacker won and they
-      get half (or some portion) losing country's money
-- solution
-  - array of n number of period :: each period countries can decide to do their
-    thing
-- evaluation :: prefer longest period of nobody losing (can be no war or the war
-  is resolved) and the most total amount of money left
-** TODO 1 Stable Matching problem
-dat should finish the student-dormitory problem
+This is a central repository for the group's code
