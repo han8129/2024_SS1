@@ -1,29 +1,34 @@
 package vn.edu.hanu.fit.ss1.group1.session4.stuntdentDormitoryPairing;
 
-import org.moeaframework.problem.AbstractProblem;
-
+import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.RandomUtils;
+import org.moeaframework.core.Constraint;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
+import org.moeaframework.problem.AbstractProblem;
+import java.util.*;
 
-import java.util.List;
-
+@FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class StudentDormitoryProblem extends AbstractProblem {
-    private final List<Student> students;
-    private final List<Dormitory> dormitories;
+    List<Student> students;
+    List<Dormitory> dormitories;
+
+    double alpha1 = 1.0; // Weight for minimizing preference mismatches
+    double alpha2 = 1.0; // Weight for minimizing overcrowding
+    double alpha3 = 1.0; // Weight for minimizing unassigned students
+
     public StudentDormitoryProblem(List<Student> students, List<Dormitory> dormitories) {
-        // The number of variables is equal to the number of students
-        super(students.size(), 3);
+        super(students.size(), 1, 1);
         this.students = students;
         this.dormitories = dormitories;
     }
+
     @Override
     public void evaluate(Solution solution) {
         int studentsWithoutDormitory = 0;
         int studentsInOvercrowdedDormitory = 0;
         int preferenceMismatch = 0;
-        for (Dormitory dormitory : dormitories) dormitory.getStudents().clear();
-        for (Student student : students) student.getPreferences().clear();
-        // Assign students to dormitories based on the solution's variables
+
         for (int i = 0; i < students.size(); i++) {
             int dormitoryIndex = EncodingUtils.getInt(solution.getVariable(i));
             Student student = students.get(i);
@@ -39,16 +44,49 @@ public class StudentDormitoryProblem extends AbstractProblem {
                     preferenceMismatch++;
                 }
             }
+            solution.setObjective(0, alpha1 * preferenceMismatch + alpha2 * studentsInOvercrowdedDormitory + alpha3 * studentsWithoutDormitory);
+            // Constraint to prevent dormitory and student with same index from being matched
+            solution.setConstraint(0, Constraint.notEqual(i, dormitoryIndex));
         }
-        solution.setObjective(0, studentsWithoutDormitory);
-        solution.setObjective(1, studentsInOvercrowdedDormitory);
-        solution.setObjective(2, preferenceMismatch);
     }
+
+    private Map<Student, Dormitory> runGaleShapley() {
+        Map<Student, Dormitory> matching = new HashMap<>();
+        Queue<Student> freeStudents = new LinkedList<>(students);
+
+        while (!freeStudents.isEmpty()) {
+            Student student = freeStudents.poll();
+            for (Dormitory dormitory : student.getPreferences()) {
+                if (dormitory.getStudents().size() < dormitory.getCapacity()) {
+                    matching.put(student, dormitory);
+                    dormitory.addStudent(student);
+                    break;
+                } else if (dormitory.getStudents().size() == dormitory.getCapacity()) {
+                    Student worstStudent = dormitory.getStudents().stream()
+                            .min(Comparator.comparingInt(s -> dormitory.getPreferences().indexOf(s)))
+                            .orElse(null);
+                    if (worstStudent != null && dormitory.getPreferences().indexOf(student) < dormitory.getPreferences().indexOf(worstStudent)) {
+                        matching.remove(worstStudent);
+                        dormitory.removeStudent(worstStudent);
+                        freeStudents.add(worstStudent);
+                        matching.put(student, dormitory);
+                        dormitory.addStudent(student);
+                        break;
+                    }
+                }
+            }
+            if (!matching.containsKey(student)) matching.put(student, null); // Student couldn't be matched
+        }
+        return matching;
+    }
+
     @Override
     public Solution newSolution() {
-        Solution solution = new Solution(students.size(), 3);
-        for (int i = 0; i < students.size(); i++) solution.setVariable(i, EncodingUtils.newInt(-1, dormitories.size() - 1));
+        Solution solution = new Solution(students.size(), 1, 1);
+        for (int i = 0; i < students.size(); i++) {
+            solution.setVariable(i, EncodingUtils.newInt(-1, dormitories.size() - 1));
+        }
         return solution;
     }
-}
 
+}
